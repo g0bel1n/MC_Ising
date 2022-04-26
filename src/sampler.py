@@ -3,8 +3,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
-from .utils import CliqueSum
+from src.utils import CliqueSum
 
 
 class Sampler(ABC):
@@ -30,13 +31,14 @@ class Sampler(ABC):
         :type img: np.ndarray
         :return: The probability of the pixel being black or white.
         """
+
         probas = [
             np.exp(self.U(0, pixel, img) - (img[pixel] ** 2) / (2 * self.sigma)),
             np.exp(
                 self.U(255, pixel, img) - ((img[pixel] - 255) ** 2) / (2 * self.sigma)
             ),
         ]
-        return probas / np.sum(probas) if probas != [0, 0] else [0, 0]
+        return probas / np.sum(probas)
 
     @abstractmethod
     def sample(self, img: np.ndarray) -> np.ndarray:
@@ -69,7 +71,7 @@ class GibbsSampler(Sampler):
             new_value=new_value, ind_pixel=ind_pixel, img=img
         )
 
-    def sample(self, img: np.ndarray) -> np.ndarray:
+    def sample(self, img: np.ndarray, gif: bool = False) -> np.ndarray:
 
         """
         We start with a random image, and then we iterate over all the pixels, and for each pixel we
@@ -87,14 +89,21 @@ class GibbsSampler(Sampler):
         L, W = img.shape
         X = img.copy()
 
+        if gif:
+            i: int = 0
+            plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
+            i += 1
         with tqdm(total=self.burn_in * L * W, desc="Burn in", ascii="░▒█") as bbar:
             for _ in range(self.burn_in):
                 for l, w in itertools.product(range(L), range(W)):
                     probas = self.getProbas(pixel=(l, w), img=X)
                     X[l, w] = np.random.choice((0, 255), 1, p=probas)
                     bbar.update(1)
+                if gif:
+                    plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
+                    i += 1
 
-        avg = np.zeros_like(img).astype(np.uint32)
+        avg = np.zeros_like(img).astype(np.uint64)
         with tqdm(total=self.n_samples * L * W, desc="Sampling", ascii="░▒█") as pbar:
             for _ in range(self.n_samples):
                 for l, w in itertools.product(range(L), range(W)):
@@ -102,11 +111,12 @@ class GibbsSampler(Sampler):
                     X[l, w] = np.random.choice((0, 255), 1, p=probas)
                     avg += X
                     pbar.update(1)
+                if gif:
+                    plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
+                    i += 1
 
         avg = avg.astype(float)
-        print(avg)
         avg = avg / (L * W * self.n_samples)
-        print(avg)
         avg[avg >= 255.0 / 2] = 255
         avg[avg < 255.0 / 2] = 0
         avg = avg.astype(np.uint8)

@@ -5,7 +5,13 @@ from src.sampler import GibbsSampler
 
 
 def denoise(
-    alpha: float, beta: float, burn_in: int, n_samples: int, sigma: float, imPath: str
+    alpha: float,
+    beta: float,
+    burn_in: int,
+    n_samples: int,
+    sigma: float,
+    imPath: str,
+    gif: bool = False,
 ):
 
     gs = GibbsSampler(alpha, beta, sigma, burn_in=burn_in, n_samples=n_samples)
@@ -13,7 +19,7 @@ def denoise(
     # Loading of images
     noised_img = Noiser(sigma).noise_img(imPath=imPath)[:224, :224]
     true_image = plt.imread(imPath)[:224, :224]
-    denoised = gs.sample(noised_img)
+    denoised = gs.sample(noised_img, gif=gif)
 
     # Plotting...
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)

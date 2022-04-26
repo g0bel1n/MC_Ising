@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
-from .utils import rgb2gray
+from src.utils import rgb2gray
 
 
 class Noiser:
@@ -21,5 +22,4 @@ class Noiser:
         gray_img = rgb2gray(img)
         im = np.zeros(gray_img.shape, float)
         noise = cv2.randn(im, (0), (self.s))
-
-        return cv2.add(noise, gray_img, dtype=0)
+        return cv2.add(noise, gray_img, dtype=cv2.CV_8U)
