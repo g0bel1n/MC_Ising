@@ -1,0 +1,1 @@
+# Image denoising using ISING MODEL and GIBBS SAMPLING
