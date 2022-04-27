@@ -11,11 +11,12 @@ def rgb2gray(rgb):
 cliques = {
     4: [(1, 0), (0, 1), (-1, 0), (0, -1)],
     8: [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)],
+    24 : [(1, 0), (0,1), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1), (-2, -2), (-2, -1), (-2, 0), (-2, 1), (-2, 2), (-1, -2), (-1, 2), (0, -2), (0, 2), (1, -2), (1,2), (2, -2), (2, -1), (2, 0), (2, 1), (2, 2)]
 }
 
 
 def CliqueSum(
-    new_value: int, ind_pixel: tuple[int, int], img: np.ndarray, connex=8
+    new_value: int, ind_pixel: tuple[int, int], img: np.ndarray, connex=24
 ) -> float:
     """
     It takes a pixel value, an index, an image, and a connexity, and returns the number of pixels in the
