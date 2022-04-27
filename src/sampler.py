@@ -85,7 +85,7 @@ class GibbsSampler(Sampler):
         :type burn_in: int (optional)
         :return: The average of the samples.
         """
-
+        changes=[]
         L, W = img.shape
         X = img.copy()
 
@@ -95,29 +95,41 @@ class GibbsSampler(Sampler):
             i += 1
         with tqdm(total=self.burn_in * L * W, desc="Burn in", ascii="░▒█") as bbar:
             for _ in range(self.burn_in):
+                change=0
                 for l, w in itertools.product(range(L), range(W)):
                     probas = self.getProbas(pixel=(l, w), img=X)
-                    X[l, w] = np.random.choice((0, 255), 1, p=probas)
+                    new_x = np.random.choice((0, 255), 1, p=probas)
+                    if new_x!=X[l, w]: change+=1
+                    X[l, w] = new_x
                     bbar.update(1)
-                if gif:
-                    plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
-                    i += 1
+                    if gif and l+w%10==0:
+                        plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
+                        i += 1
+                changes.append(change)
 
         avg = np.zeros_like(img).astype(np.uint64)
         with tqdm(total=self.n_samples * L * W, desc="Sampling", ascii="░▒█") as pbar:
             for _ in range(self.n_samples):
+                change=0
                 for l, w in itertools.product(range(L), range(W)):
                     probas = self.getProbas(pixel=(l, w), img=X)
-                    X[l, w] = np.random.choice((0, 255), 1, p=probas)
+                    new_x = np.random.choice((0, 255), 1, p=probas)
+                    if new_x!=X[l, w]: change+=1
+                    X[l, w] = new_x
                     avg += X
                     pbar.update(1)
-                if gif:
-                    plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
-                    i += 1
+                    if gif and l%10==0 and w==0:
+                        plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
+                        i += 1
+                changes.append(change)
 
         avg = avg.astype(float)
         avg = avg / (L * W * self.n_samples)
         avg[avg >= 255.0 / 2] = 255
         avg[avg < 255.0 / 2] = 0
         avg = avg.astype(np.uint8)
+
+        plt.plot(changes)
+        plt.show()
+        plt.savefig('changes')
         return avg

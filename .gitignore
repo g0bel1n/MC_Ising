@@ -1,3 +1,5 @@
 *__pychache__
 *.DS_Store
 data/output/gif/*
+*.pyc
+*.gif
