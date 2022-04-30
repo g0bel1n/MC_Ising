@@ -5,13 +5,13 @@ import imageio
 import matplotlib.pyplot as plt
 
 from src.noiser import Noiser
-from src.sampler import GibbsSampler
+from src.gibbSamplerVariance import GibbsSampler
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--b", type=int, default=20, help="Burn in")
-    parser.add_argument("--ns", type=int, default=20, help="Samples")
+    parser.add_argument("--b", type=int, default=0, help="Burn in")
+    parser.add_argument("--ns", type=int, default=1, help="Samples")
     parser.add_argument(
         "--imp",
         type=str,
@@ -19,7 +19,7 @@ def main():
         help="Path of the image to noise",
     )
     parser.add_argument("--alpha", type=float, default=0.0, help="alpha")
-    parser.add_argument("--beta", type=float, default=0.03, help="beta")
+    parser.add_argument("--beta", type=float, default=None, help="beta")
     parser.add_argument("--sigma", type=float, default=179, help="sigma")
     parser.add_argument("--g", type=bool, default=True, help="Save for gif")
 
@@ -28,10 +28,14 @@ def main():
     gs = GibbsSampler(args.alpha, args.beta, args.sigma, burn_in=args.b, n_samples=args.ns)
 
     # Loading of images
+    true_image = plt.imread(args.imp)
+    print(true_image.shape)
     noised_img = Noiser(args.sigma).noise_img(imPath=args.imp)
     true_image = plt.imread(args.imp)
-    denoised = gs.sample(noised_img, gif=args.g)
+    results = gs.sample(noised_img, gif=args.g)
 
+    denoised = results['img']
+    print(f"{results['alpha']=} \n{results['beta']=} \n{results['tau_square']=} \n")
     # Plotting...
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
