@@ -52,11 +52,11 @@ class GibbsSampler(Sampler):
         changes=[]
         rng = default_rng()
         L, W = img.shape
-        X = img.copy()
+        X = img.copy()/255.
         tau_square = self.tau_square
-        tau_square_storage = 0 if self.tau_square is None else self.tau_square
-        alpha_storage = 0 if self.alpha is None else self.alpha
-        beta_storage = 0 if self.beta is None else self.beta
+        tau_square_storage = 0. if self.tau_square is None else self.tau_square
+        alpha_storage = 0. if self.alpha is None else self.alpha
+        beta_storage = 0. if self.beta is None else self.beta
 
         alpha = self.alpha
         beta = self.beta
@@ -70,7 +70,7 @@ class GibbsSampler(Sampler):
             for _ in range(self.burn_in):
                 if self.tau_square is None :
                     a,b = alpha_invgamma + (L*W)/2, beta_invgamma + np.sum(np.square(X))/2
-                    tau_square = invgamma(a=a, scale = b)
+                    tau_square = invgamma(a=a, scale = b).rvs()
 
                 if self.alpha or self.beta is None :
                     mu_alpha, mu_beta = np.sum(X), np.sum([CliqueSum(new_value=X[l,w],ind_pixel=(l,w),img=X) for l, w in itertools.product(range(L), range(W))])
@@ -80,7 +80,7 @@ class GibbsSampler(Sampler):
 
                 for l, w in itertools.product(range(L), range(W)):
                     probas = self.getProbas(pixel=(l, w), img=X, alpha=alpha, beta=beta, tau_square=tau_square)
-                    new_x = np.random.choice((0, 255), 1, p=probas)
+                    new_x = np.random.choice((0, 1), 1, p=probas)
                     if new_x!=X[l, w]: change+=1
                     X[l, w] = new_x
                     bbar.update(1)
@@ -89,27 +89,27 @@ class GibbsSampler(Sampler):
                         i += 1
                 changes.append(change)
 
-        avg = np.zeros_like(img).astype(np.uint64)
+        avg = np.zeros_like(img).astype(np.float64)
         with tqdm(total=self.n_samples * L * W, desc="Sampling", ascii="░▒█") as pbar:
             for _ in range(self.n_samples):
 
                 if self.tau_square is None :
                     a,b = alpha_invgamma + (L*W)/2, beta_invgamma + np.sum(np.square(X))/2
-                    tau_square = invgamma(a=a, scale = b)
+                    tau_square = invgamma(a=a, scale = b).rvs()
 
 
                 if self.alpha or self.beta is None :
                     mu_alpha, mu_beta = np.sum(X), np.sum([CliqueSum(new_value=int(X[l,w]),ind_pixel=(l,w),img=X) for l, w in itertools.product(range(L), range(W))])
                     alpha, beta = rng.exponential(lambda_alpha- mu_alpha), rng.exponential(lambda_beta-mu_beta)
 
-                tau_square_storage += tau_square
-                alpha_storage += alpha
-                beta_storage += beta
+                tau_square_storage += float(tau_square)
+                alpha_storage += float(alpha)
+                beta_storage += float(beta)
                 
                 change=0
                 for l, w in itertools.product(range(L), range(W)):
                     probas = self.getProbas(pixel=(l, w), img=X, alpha=alpha, beta=beta, tau_square=tau_square)
-                    new_x = np.random.choice((0, 255), 1, p=probas)
+                    new_x = np.random.choice((0, 1), 1, p=probas)
                     if new_x!=X[l, w]: change+=1
                     X[l, w] = new_x
                     avg += X
@@ -121,11 +121,11 @@ class GibbsSampler(Sampler):
 
         avg = avg.astype(float)
         avg = avg / (L * W * self.n_samples)
-        avg[avg >= 255.0 / 2] = 255
-        avg[avg < 255.0 / 2] = 0
+        avg[avg >= 1.0 / 2] = 255
+        avg[avg < 1.0 / 2] = 0
         avg = avg.astype(np.uint8)
 
         plt.plot([np.log(change) if change>0 else 0 for change in changes])
         plt.show()
         plt.savefig('changes')
-        return {'img':avg, 'alpha': alpha_storage/(L * W * self.n_samples), 'beta':beta_storage/(L * W * self.n_samples), 'tau_square': tau_square_storage/(L * W * self.n_samples)}
+        return {'img':avg, 'alpha': alpha_storage/self.n_samples), 'beta':beta_storage/(self.n_samples), 'tau_square': tau_square_storage/(self.n_samples)}

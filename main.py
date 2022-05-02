@@ -19,13 +19,13 @@ def main():
         help="Path of the image to noise",
     )
     parser.add_argument("--alpha", type=float, default=0.0, help="alpha")
-    parser.add_argument("--beta", type=float, default=None, help="beta")
+    parser.add_argument("--beta", type=float, default=1, help="beta")
     parser.add_argument("--sigma", type=float, default=179, help="sigma")
     parser.add_argument("--g", type=bool, default=True, help="Save for gif")
 
     args = parser.parse_args()
 
-    gs = GibbsSampler(args.alpha, args.beta, args.sigma, burn_in=args.b, n_samples=args.ns)
+    gs = GibbsSampler(args.alpha, args.beta, None, burn_in=args.b, n_samples=args.ns)
 
     # Loading of images
     true_image = plt.imread(args.imp)

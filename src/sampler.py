@@ -38,7 +38,7 @@ class Sampler(ABC):
         probas = [
             np.exp(self.U(0, pixel, img, alpha, beta) - (img[pixel] ** 2) / (2 * tau_square)),
             np.exp(
-                self.U(255, pixel, img, alpha, beta) - ((img[pixel] - 255) ** 2) / (2 * tau_square)
+                self.U(1, pixel, img, alpha, beta) - ((img[pixel] - 1) ** 2) / (2 * tau_square)
             ),
         ]
         return probas / np.sum(probas)
