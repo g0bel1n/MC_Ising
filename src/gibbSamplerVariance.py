@@ -114,7 +114,7 @@ class GibbsSampler(Sampler):
                     X[l, w] = new_x
                     avg += X
                     pbar.update(1)
-                    if gif and l%100==0 and w==0:
+                    if gif and l%20==0 and w==0:
                         plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
                         i += 1
                 changes.append(change)
@@ -128,4 +128,4 @@ class GibbsSampler(Sampler):
         plt.plot([np.log(change) if change>0 else 0 for change in changes])
         plt.show()
         plt.savefig('changes')
-        return {'img':avg, 'alpha': alpha_storage/self.n_samples), 'beta':beta_storage/(self.n_samples), 'tau_square': tau_square_storage/(self.n_samples)}
+        return {'img':avg, 'alpha': alpha_storage/self.n_samples, 'beta':beta_storage/(self.n_samples), 'tau_square': tau_square_storage/(self.n_samples)}
