@@ -10,8 +10,8 @@ from src.gibbSamplerVariance import GibbsSampler
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--b", type=int, default=0, help="Burn in")
-    parser.add_argument("--ns", type=int, default=1, help="Samples")
+    parser.add_argument("--b", type=int, default=40, help="Burn in")
+    parser.add_argument("--ns", type=int, default=5, help="Samples")
     parser.add_argument(
         "--imp",
         type=str,
@@ -21,12 +21,15 @@ def main():
     parser.add_argument("--alpha", type=float, default=0.0, help="alpha")
     parser.add_argument("--beta", type=float, default=1, help="beta")
     parser.add_argument("--sigma", type=float, default=179, help="sigma")
+    parser.add_argument("--findsigma", type=bool, default=False, help="find sigma ?")
+
+
     parser.add_argument("--g", type=bool, default=True, help="Save for gif")
 
     args = parser.parse_args()
 
     #gs = GibbsSampler(args.alpha, args.beta, args.sigma, burn_in=args.b, n_samples=args.ns)
-    gs = GibbsSampler(0.0, 1.3, args.sigma, burn_in=args.b, n_samples=args.ns)
+    gs = GibbsSampler(0.0, 1.3, args.sigma if not args.findsigma else None, burn_in=args.b, n_samples=args.ns)
 
 
     # Loading of images
@@ -57,7 +60,7 @@ def main():
             imageio.imread(f"data/output/gif/{filename}.png") for filename in filenames
         ]
 
-        imageio.mimsave("data/output/denoise.gif", images, fps=3)
+        imageio.mimsave("data/output/denoise.gif", images, fps=25)
         for filename in filenames:
             os.remove(f"data/output/gif/{filename}.png")
 

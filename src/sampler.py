@@ -34,7 +34,6 @@ class Sampler(ABC):
         :type img: np.ndarray
         :return: The probability of the pixel being black or white.
         """
-
         probas = [
             np.exp(self.U(0, pixel, img, alpha, beta) - (img[pixel] ** 2) / (2 * tau_square)),
             np.exp(

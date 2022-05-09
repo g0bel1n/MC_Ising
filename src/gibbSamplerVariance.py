@@ -57,20 +57,24 @@ class GibbsSampler(Sampler):
         :type burn_in: int (optional)
         :return: The average of the samples.
         """
-
+        
         changes = []
         L, W = img.shape
+        rng = default_rng()
+        indices = [(l,w) for l,w in itertools.product(range(L), range(W))]
+        change_rate = 0.6
         X = img.copy() / 255.0
         tau_square = self.tau_square
         tau_square_storage = [0.0] if self.tau_square is None else [self.tau_square]
+        x_storage = [X[0,0]]
 
-        alpha_invgamma, beta_invgamma = 2, 1
+        alpha_invgamma, beta_invgamma = 2, 100
         
         if gif:
             i: int = 0
             plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
             i += 1
-        with tqdm(total=self.burn_in * L * W, desc="Burn in", ascii="░▒█") as bbar:
+        with tqdm(total=self.burn_in * L * W*change_rate, desc="Burn in", ascii="░▒█") as bbar:
             for _ in range(self.burn_in):
                 if self.tau_square is None:
                     a, b = (
@@ -82,15 +86,13 @@ class GibbsSampler(Sampler):
                 
 
                 change = 0
-                alpha_storage.append(alpha)
-                beta_storage.append(beta)
-
-                for l, w in itertools.product(range(L), range(W)):
+                x_storage.append(X[0,0])
+                for l, w in rng.choice(indices,int(L*W*change_rate)):
                     probas = self.getProbas(
                         pixel=(l, w),
                         img=X,
-                        alpha=alpha,
-                        beta=beta,
+                        alpha=self.alpha,
+                        beta=self.beta,
                         tau_square=tau_square,
                     )
                     new_x = np.random.choice((0, 1), 1, p=probas)
@@ -104,8 +106,7 @@ class GibbsSampler(Sampler):
                 changes.append(change)
 
         avg = np.zeros_like(img).astype(np.float64)
-        print(img / 255.0 - X)
-        with tqdm(total=self.n_samples * L * W, desc="Sampling", ascii="░▒█") as pbar:
+        with tqdm(total=self.n_samples * L * W*change_rate, desc="Sampling", ascii="░▒█") as pbar:
             for _ in range(self.n_samples):
 
                 if self.tau_square is None:
@@ -118,14 +119,14 @@ class GibbsSampler(Sampler):
                 tau_square_storage.append(tau_square)
 
                 change = 0
-
-                for l, w in itertools.product(range(L), range(W)):
+                x_storage.append(X[0,0])
+                for l, w in rng.choice(indices,int(L*W*change_rate)):
 
                     probas = self.getProbas(
                         pixel=(l, w),
                         img=X,
-                        alpha=alpha,
-                        beta=beta,
+                        alpha=self.alpha,
+                        beta=self.beta,
                         tau_square=tau_square,
                     )
                     new_x = np.random.choice((0, 1), 1, p=probas)
@@ -140,17 +141,22 @@ class GibbsSampler(Sampler):
                 changes.append(change)
 
         avg = avg.astype(float)
-        avg = avg / (L * W * self.n_samples)
+        avg = avg / (L * W * int(self.n_samples*change_rate))
         avg[avg >= 1.0 / 2] = 255
         avg[avg < 1.0 / 2] = 0
         avg = avg.astype(np.uint8)
 
         plt.plot([np.log(change) if change > 0 else 0 for change in changes])
         plt.show()
-        plt.savefig("changes")
+        plt.savefig("data/output/changes")
+
+        from statsmodels.graphics.tsaplots import plot_acf
+        plot_acf(np.array(x_storage))
+        plt.savefig("data/output/acf")
+
         return {
             "img": avg,
-            "alpha": alpha,
-            "beta": beta,
+            "alpha": self.alpha,
+            "beta": self.beta,
             "tau_square": np.mean(tau_square_storage),
         }

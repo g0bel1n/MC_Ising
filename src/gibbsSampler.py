@@ -87,5 +87,5 @@ class GibbsSampler(Sampler):
 
         plt.plot([np.log(change) if change>0 else 0 for change in changes])
         plt.show()
-        plt.savefig('changes')
+        plt.savefig('data/output/changes.png')
         return avg
