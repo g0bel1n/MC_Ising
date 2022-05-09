@@ -61,42 +61,11 @@ class GibbsSampler(Sampler):
         changes = []
         L, W = img.shape
         X = img.copy() / 255.0
-        print(f"{np.sum(X)}")
         tau_square = self.tau_square
         tau_square_storage = [0.0] if self.tau_square is None else [self.tau_square]
 
         alpha_invgamma, beta_invgamma = 2, 1
-        mu_alpha, mu_beta = 0, 1
-        sigma_square_alpha, sigma_square_beta = 1.0 / 2, 1.0 / 2
-
-        alpha = (
-            np.random.normal(mu_alpha, sigma_square_alpha)
-            if self.alpha is None
-            else self.alpha
-        )
-        beta = (
-            np.random.normal(mu_beta, sigma_square_beta)
-            if self.beta is None
-            else self.beta
-        )
-
-        alpha_storage = [alpha]
-        beta_storage = [beta]
-
-        prop_to_posterior_alpha = np.exp(
-            alpha * np.sum(X) + ((alpha - mu_alpha) ** 2) / (2 * sigma_square_alpha)
-        )
-        prop_to_posterior_beta = np.exp(
-            beta
-            * np.sum(
-                [
-                    CliqueSum(new_value=int(X[l, w]), ind_pixel=(l, w), img=X)
-                    for l, w in itertools.product(range(L), range(W))
-                ]
-            )
-            + ((beta - mu_beta) ** 2) / (2 * sigma_square_beta)
-        )
-
+        
         if gif:
             i: int = 0
             plt.imsave(f"data/output/gif/{i}.png", X, cmap="gray")
@@ -110,41 +79,7 @@ class GibbsSampler(Sampler):
                     )
                     tau_square = invgamma(a=a, scale=b).rvs()
 
-                if self.alpha or self.beta is None:
-                    new_alpha_candidate, new_beta_candidate = (
-                        np.random.normal(mu_alpha, sigma_square_alpha),
-                        np.random.normal(mu_beta, sigma_square_beta),
-                    )
-                    new_prop_to_posterior_alpha = np.exp(
-                        new_alpha_candidate * np.sum(X)
-                        + ((new_alpha_candidate - mu_alpha) ** 2)
-                        / (2 * sigma_square_alpha)
-                    )
-                    new_prop_to_posterior_beta = np.exp(
-                        new_beta_candidate
-                        * np.sum(
-                            [
-                                CliqueSum(
-                                    new_value=int(X[l, w]), ind_pixel=(l, w), img=X
-                                )
-                                for l, w in itertools.product(range(L), range(W))
-                            ]
-                        )
-                        + ((new_beta_candidate - mu_beta) ** 2)
-                        / (2 * sigma_square_beta)
-                    )
-                    if (
-                        min(1, new_prop_to_posterior_alpha / prop_to_posterior_alpha)
-                        <= np.random.uniform()
-                    ):
-                        prop_to_posterior_alpha = new_prop_to_posterior_alpha
-                        alpha = new_alpha_candidate
-                    if (
-                        min(1, new_prop_to_posterior_beta / prop_to_posterior_beta)
-                        <= np.random.uniform()
-                    ):
-                        prop_to_posterior_beta = new_prop_to_posterior_beta
-                        beta = new_beta_candidate
+                
 
                 change = 0
                 alpha_storage.append(alpha)
@@ -180,45 +115,7 @@ class GibbsSampler(Sampler):
                     )
                     tau_square = invgamma(a=a, scale=b).rvs()
 
-                if self.alpha or self.beta is None:
-                    new_alpha_candidate, new_beta_candidate = (
-                        np.random.normal(mu_alpha, sigma_square_alpha),
-                        np.random.normal(mu_beta, sigma_square_beta),
-                    )
-                    new_prop_to_posterior_alpha = np.exp(
-                        new_alpha_candidate * np.sum(X)
-                        + ((new_alpha_candidate - mu_alpha) ** 2)
-                        / (2 * sigma_square_alpha)
-                    )
-                    new_prop_to_posterior_beta = np.exp(
-                        new_beta_candidate
-                        * np.sum(
-                            [
-                                CliqueSum(
-                                    new_value=int(X[l, w]), ind_pixel=(l, w), img=X
-                                )
-                                for l, w in itertools.product(range(L), range(W))
-                            ]
-                        )
-                        + ((new_beta_candidate - mu_beta) ** 2)
-                        / (2 * sigma_square_beta)
-                    )
-                    if (
-                        min(1, new_prop_to_posterior_alpha / prop_to_posterior_alpha)
-                        <= np.random.uniform()
-                    ):
-                        prop_to_posterior_alpha = new_prop_to_posterior_alpha
-                        alpha = new_alpha_candidate
-                    if (
-                        min(1, new_prop_to_posterior_beta / prop_to_posterior_beta)
-                        <= np.random.uniform()
-                    ):
-                        prop_to_posterior_beta = new_prop_to_posterior_beta
-                        beta = new_beta_candidate
-
                 tau_square_storage.append(tau_square)
-                alpha_storage.append(alpha)
-                beta_storage.append(beta)
 
                 change = 0
 
@@ -257,12 +154,3 @@ class GibbsSampler(Sampler):
             "beta": beta,
             "tau_square": np.mean(tau_square_storage),
         }
-
-
-#%%
-from numpy.random import default_rng
-
-rng = default_rng()
-rng.exponential(2)
-# %%
-

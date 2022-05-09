@@ -26,7 +26,7 @@ def main():
     args = parser.parse_args()
 
     #gs = GibbsSampler(args.alpha, args.beta, args.sigma, burn_in=args.b, n_samples=args.ns)
-    gs = GibbsSampler(None, None, args.sigma, burn_in=args.b, n_samples=args.ns)
+    gs = GibbsSampler(0.0, 1.3, args.sigma, burn_in=args.b, n_samples=args.ns)
 
 
     # Loading of images
