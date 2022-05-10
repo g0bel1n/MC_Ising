@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 from src.utils import rgb2gray
 
@@ -18,8 +17,8 @@ class Noiser:
         :return: The image with noise.
         """
 
-        img = cv2.imread(imPath)
+        img = cv2.imread(imPath)  # img is a b&w image coded as a RGB one.
         gray_img = rgb2gray(img)
-        im = np.zeros(gray_img.shape, float)
-        noise = cv2.randn(im, (0), (self.s))
+        noise = cv2.randn(np.zeros(gray_img.shape, float), (0), (self.s))
+
         return cv2.add(noise, gray_img, dtype=cv2.CV_8U)

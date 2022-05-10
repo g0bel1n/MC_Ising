@@ -1,0 +1,7 @@
+statsmodels
+numpy
+matplotlib
+scipy
+tqdm
+cv2
+imageio

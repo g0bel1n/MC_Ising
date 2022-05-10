@@ -25,3 +25,18 @@ With random scan :
 </p>
 
 
+## ⚡️ On Boarding 
+
+'''shell
+pip install -r requirements.txt
+'''
+
+Then : 
+
+'''shell
+main.py --findsigma True --alpha 0.0 #etc...
+'''
+
+The argument available are :
+
+    - 
